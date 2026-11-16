@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OKAD Worker Code</title>
+<style>
+body{font-family:system-ui;margin:0;padding:20px;background:#0B1426;color:#fff;min-height:100vh}
+.hdr{background:#1a2942;padding:16px 20px;border-radius:12px;margin-bottom:16px;border:1px solid #2a3952}
+.hdr h1{margin:0 0 6px;font-size:20px;color:#F59E0B}
+.hdr p{margin:0;color:#9CA3AF;font-size:13px;line-height:1.6}
+.box{position:sticky;top:0;background:#0B1426;padding:12px 0;border-bottom:1px solid #2a3952;z-index:10;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{padding:10px 18px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;transition:all .15s}
+.btn-primary{background:#F59E0B;color:#000}
+.btn-primary:hover{background:#FBBF24}
+.btn-primary:disabled{background:#4B5563;color:#9CA3AF;cursor:not-allowed}
+.btn-secondary{background:#1a2942;color:#fff;border:1px solid #2a3952}
+.btn-secondary:hover{background:#2a3952}
+pre{background:#000;color:#10B981;padding:16px;border-radius:8px;overflow:auto;max-height:70vh;font-size:12px;line-height:1.5;border:1px solid #1a2942;white-space:pre;word-break:normal;font-family:ui-monospace,Menlo,Consolas,monospace}
+.toast{position:fixed;top:20px;right:20px;background:#10B981;color:#000;padding:12px 18px;border-radius:8px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.4);display:none;z-index:100}
+.warn{background:#7C2D12;color:#FED7AA;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>OKAD Worker — Cloudflare Dashboard 部署助手</h1>
+  <p>下面是你要粘贴到 Cloudflare Dashboard Worker 编辑器的完整代码（696 行 / 25 KB）。</p>
+  <p>第 1 步：点 "复制完整代码" 按钮<br>第 2 步：到 Cloudflare Worker 编辑器，按 <b>Ctrl+A</b> 选中所有，<b>Delete</b> 删掉，<b>Ctrl+V</b> 粘贴<br>第 3 步：<b>Ctrl+S</b> 保存，点右上角 <b>Deploy</b> 部署</p>
+</div>
+<div class="warn">
+  ⚠️ <b>先在 Cloudflare 编辑器里 Ctrl+A 全选 → Delete 清空</b>，再回来点复制按钮，否则会重复粘贴。
+</div>
+<div class="box">
+  <button class="btn btn-primary" id="copyBtn" onclick="copyAll()">📋 复制完整代码（25 KB）</button>
+  <button class="btn btn-secondary" onclick="selectAll()">全选代码（手动复制）</button>
+  <button class="btn btn-secondary" onclick="downloadCode()">💾 下载为 worker.js</button>
+  <span style="color:#9CA3AF;font-size:12px;margin-left:auto">字符数: <span id="charCount">24873</span></span>
+</div>
+<pre id="code">/**
+ * OKAD AFRICA — Unified AI + SMS + Email + D1 Worker
+ * --------------------------------------------------------------
+ * 用途1 : 接收图像生成请求, 代理调用 OpenRouter Meta Muse 模型
+ * 用途2 : 发送邮箱验证码 (Resend API), 用于 OKAD 真实客户注册
+ * 用途3 : 发送 SMS 验证码 (Africa's Talking), 覆盖无邮箱的非洲客户
+ * 用途4 : 代理实时汇率 API (open.er-api.com)
+ * 用途5 : D1 数据库 CRUD — users / orders / cooperation / kyc_logs
+ * 部署   : Cloudflare Workers (免费额度 100,000 次/天)
+ * 绑定   : OPENROUTER_API_KEY           (Secret, Muse)
+ *          RESEND_API_KEY                (Secret, 邮件, 可选)
+ *          AFRICASTALKING_API_KEY        (Secret, SMS, 可选)
+ *          AFRICASTALKING_USERNAME       (Variable, SMS, 可选)
+ *          AFRICASTALKING_FROM           (Variable, SMS Sender ID, 默认 "OKad")
+ *          AFRICASTALKING_SANDBOX        (Variable, "true" 用沙盒, 可选)
+ *          DB                             (D1 binding, 必需,数据库)
+ *
+ * 调用示例 (前端 fetch):
+ *   POST  https://okad-unified.YOUR-SUBDOMAIN.workers.dev/api/muse
+ *   Body  { "prompt":"...", "userId":"user@example.com" }
+ *   Resp  { "image":"data:image/png;base64,iVBORw0KG..." }
+ *
+ *   POST  .../api/email-code   Body: { email }
+ *   POST  .../api/sms-code     Body: { phone:"+233..." }
+ *   GET   .../api/exchange-rates
+ *   GET   .../api/db/users?email=foo@bar.com
+ *   POST  .../api/db/users  Body: { email, name, ... }  (upsert by PK)
+ *   PATCH .../api/db/users?email=foo@bar.com  Body: { kyc_status:'approved' }
+ *   DELETE .../api/db/users?email=foo@bar.com
+ */
+
+export default {
+  async fetch(req, env, ctx) {
+    const url = new URL(req.url);
+    const path = url.pathname;
+
+    /* ---------- CORS preflight ---------- */
+    if (req.method === 'OPTIONS') {
+      return new Response(null, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Max-Age': '86400',
+        }
+      });
+    }
+
+    /* ---------- Health check (GET /) ---------- */
+    if (req.method === 'GET' && (path === '/' || path === '')) {
+      return new Response(JSON.stringify({
+        ok: true,
+        service: 'OKAD Unified Worker',
+        routes: ['/api/muse', '/api/email-code', '/api/sms-code', '/api/exchange-rates',
+                 'GET/POST/PATCH/DELETE /api/db/{users|orders|cooperation|kyc_logs|fx_snapshots}'],
+        muse_configured: !!env.OPENROUTER_API_KEY,
+        email_configured: !!env.RESEND_API_KEY,
+        sms_configured: !!(env.AFRICASTALKING_API_KEY && env.AFRICASTALKING_USERNAME),
+        db_configured: !!env.DB,
+        ts: Date.now()
+      }), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
+    /* ---------- Route: /api/muse (image generation, POST only) ---------- */
+    if ((path === '/api/muse' || path.endsWith('/api/muse')) && req.method === 'POST') {
+      return handleMuse(req, env);
+    }
+
+    /* ---------- Route: /api/email-code (verification code via email, POST only) ---------- */
+    if ((path === '/api/email-code' || path.endsWith('/api/email-code')) && req.method === 'POST') {
+      return handleEmailCode(req, env);
+    }
+
+    /* ---------- Route: /api/sms-code (verification code via SMS, POST only) ---------- */
+    if ((path === '/api/sms-code' || path.endsWith('/api/sms-code')) && req.method === 'POST') {
+      return handleSmsCode(req, env);
+    }
+
+    /* ---------- Route: /api/exchange-rates (live FX, GET only) ---------- */
+    if ((path === '/api/exchange-rates' || path.endsWith('/api/exchange-rates')) && req.method === 'GET') {
+      return handleExchangeRates(req, env, ctx);
+    }
+
+    /* ---------- Route: /api/db/{table} (D1 CRUD: GET/POST/PATCH/DELETE) ---------- */
+    const dbMatch = path.match(/\/api\/db\/([a-z_]+)$/);
+    if (dbMatch) {
+      return handleDb(req, env, dbMatch[1]);
+    }
+
+    return jsonError(404, 'Unknown route. Available: /api/muse, /api/email-code, /api/sms-code, /api/exchange-rates, /api/db/{table}');
+  }
+};
+
+/* ============================================================
+ *   /api/exchange-rates  — Live FX rates (proxy open.er-api.com)
+ *   Returns: { ok, base:"USD", rates:{GHS,NGN,...}, cached, ts, source }
+ * ============================================================ */
+async function handleExchangeRates(req, env, ctx) {
+  /* Cache for 1 hour to avoid hammering upstream */
+  const cache = caches.default;
+  const cachedResp = await cache.match(req);
+  if (cachedResp) {
+    const cachedJson = await cachedResp.json();
+    return jsonOk(Object.assign({ cached: true }, cachedJson));
+  }
+
+  /* Try primary: open.er-api.com (free, no API key) */
+  let resp, ratesData, source = 'open.er-api.com';
+
+  try {
+    resp = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const json = await resp.json();
+    if (!json.rates || Object.keys(json.rates).length &lt; 10) throw new Error('Empty rates');
+    ratesData = {
+      base: json.base_code || 'USD',
+      rates: json.rates,
+      ts: json.time_last_update_unix ? json.time_last_update_unix * 1000 : Date.now(),
+      source: source,
+    };
+  } catch (e1) {
+    /* Try secondary: exchangerate.host */
+    source = 'exchangerate.host';
+    try {
+      resp = await fetch('https://api.exchangerate.host/latest?base=USD');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const json2 = await resp.json();
+      if (!json2.rates || Object.keys(json2.rates).length &lt; 10) throw new Error('Empty rates');
+      ratesData = {
+        base: json2.base || 'USD',
+        rates: json2.rates,
+        ts: Date.now(),
+        source: source,
+      };
+    } catch (e2) {
+      /* Both failed — return hardcoded fallback */
+      return jsonOk({
+        ok: true,
+        cached: false,
+        fallback: true,
+        base: 'USD',
+        rates: {
+          GHS: 12.5, NGN: 1580, KES: 129, ZAR: 18.2, EGP: 49.5,
+          TZS: 2510, UGX: 3700, XOF: 605, MAD: 9.9, CNY: 7.2,
+          EUR: 0.92, GBP: 0.79,
+        },
+        ts: Date.now(),
+        source: 'hardcoded_fallback',
+        warning: 'All upstream APIs failed: ' + e1.message + ' / ' + e2.message,
+      });
+    }
+  }
+
+  /* Pick only currencies OKAD uses */
+  const PICK = ['GHS','NGN','KES','ZAR','EGP','TZS','UGX','XOF','MAD','MZN','CNY','EUR','GBP','USD'];
+  const filtered = {};
+  PICK.forEach(c =&gt; { if (ratesData.rates[c]) filtered[c] = ratesData.rates[c]; });
+
+  const result = {
+    ok: true,
+    cached: false,
+    base: ratesData.base,
+    rates: filtered,
+    ts: ratesData.ts,
+    source: source,
+  };
+
+  /* Cache for 1 hour (async, don't block response) */
+  const cacheableResp = new Response(JSON.stringify(result), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=3600',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+  if (ctx && ctx.waitUntil) {
+    ctx.waitUntil(cache.put(req, cacheableResp.clone()));
+  }
+
+  return cacheableResp;
+}
+
+/* ============================================================
+ *   /api/muse  — Image generation via OpenRouter Meta Muse
+ * ============================================================ */
+async function handleMuse(req, env) {
+  const apiKey = env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    return jsonError(500, 'OPENROUTER_API_KEY secret is not configured. Set it in Cloudflare dashboard → Worker → Settings → Variables.');
+  }
+
+  let body;
+  try { body = await req.json(); }
+  catch (e) { return jsonError(400, 'Invalid JSON body'); }
+
+  const prompt = (body.prompt || '').toString().trim();
+  const userId = (body.userId || 'anon').toString().slice(0, 64);
+
+  if (prompt.length &lt; 4)  return jsonError(400, 'prompt too short (min 4 chars)');
+  if (prompt.length &gt; 2000) return jsonError(400, 'prompt too long (max 2000 chars)');
+
+  /* Per-IP rate limit (10/min) */
+  const ip = req.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!await checkRate(env, ip, 'muse')) {
+    return jsonError(429, 'Rate limit exceeded (10 requests/min per IP). Please wait.');
+  }
+
+  /* Call OpenRouter Meta Muse Image (OpenAI-compatible endpoint) */
+  const startedAt = Date.now();
+  let orResp;
+  try {
+    orResp = await fetch('https://openrouter.ai/api/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://okad-africa.com',
+        'X-Title': 'OKAD AFRICA',
+      },
+      body: JSON.stringify({
+        model: 'meta/muse-image',
+        prompt: prompt,
+        n: 1,
+        size: '1024x1024',
+      }),
+    });
+  } catch (e) {
+    return jsonError(502, 'OpenRouter network error: ' + e.message);
+  }
+
+  if (!orResp.ok) {
+    const errText = await orResp.text();
+    return jsonError(orResp.status, 'OpenRouter error (HTTP ' + orResp.status + '): ' + errText.slice(0, 800));
+  }
+
+  const orJson = await orResp.json();
+  const imgObj = orJson.data && orJson.data[0];
+  if (!imgObj) {
+    return jsonError(502, 'OpenRouter returned no data[]. Full: ' + JSON.stringify(orJson).slice(0, 500));
+  }
+  /* Support both b64_json (OpenAI-style) and url (some OpenRouter providers) */
+  let imageDataUrl = null;
+  if (imgObj.b64_json) {
+    imageDataUrl = 'data:image/png;base64,' + imgObj.b64_json;
+  } else if (imgObj.url) {
+    imageDataUrl = imgObj.url;
+  } else {
+    return jsonError(502, 'OpenRouter image has neither b64_json nor url. Fields: ' + Object.keys(imgObj).join(', '));
+  }
+
+  const elapsed = Date.now() - startedAt;
+  return new Response(JSON.stringify({
+    image: imageDataUrl,
+    model: 'meta/muse-image',
+    provider: 'openrouter',
+    elapsed_ms: elapsed,
+    user: userId,
+    prompt_chars: prompt.length,
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-store',
+    }
+  });
+}
+
+/* ============================================================
+ *   /api/email-code  — Verification code via Resend
+ * ============================================================ */
+async function handleEmailCode(req, env) {
+  let body;
+  try { body = await req.json(); }
+  catch (e) { return jsonError(400, 'Invalid JSON body'); }
+
+  const email = (body.email || '').toString().trim().toLowerCase();
+
+  /* Email format validation */
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    return jsonError(400, 'Invalid email format');
+  }
+  if (email.length &gt; 254) {
+    return jsonError(400, 'Email too long');
+  }
+
+  /* Per-IP rate limit (5/min) */
+  const ip = req.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!await checkRate(env, ip, 'email', 5)) {
+    return jsonError(429, 'Rate limit exceeded (5 requests/min per IP). Please wait.');
+  }
+
+  /* Generate 6-digit verification code */
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+
+  /* Check if Resend is configured */
+  const resendKey = env.RESEND_API_KEY;
+  if (!resendKey) {
+    /* Mock mode: return code in body (DEMO only) */
+    return jsonOk({
+      ok: true,
+      mock: true,
+      code: '888888',
+      message: 'RESEND_API_KEY not configured. Returning DEMO code 888888.',
+      email: email,
+    });
+  }
+
+  /* Call Resend API */
+  const fromAddr = env.RESEND_FROM || 'OKad Africa &lt;noreply@okad.app&gt;';
+  const subject = (env.RESEND_SUBJECT || '[OKad] Your verification code');
+  const htmlBody = `
+    &lt;div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;padding:20px"&gt;
+      &lt;div style="background:#FF6B00;color:#fff;padding:14px 20px;border-radius:10px 10px 0 0;font-size:18px;font-weight:700"&gt;OKad Africa&lt;/div&gt;
+      &lt;div style="background:#fff;border:1px solid #eee;border-top:none;padding:24px;border-radius:0 0 10px 10px"&gt;
+        &lt;h2 style="margin:0 0 12px;color:#0F1B3D"&gt;Verification Code&lt;/h2&gt;
+        &lt;p style="color:#666;line-height:1.6;margin:0 0 18px"&gt;Use this code to complete your registration. It expires in 10 minutes.&lt;/p&gt;
+        &lt;div style="background:#F7F8FA;border-radius:10px;padding:20px;text-align:center;margin:18px 0"&gt;
+          &lt;div style="font-size:32px;font-weight:700;letter-spacing:8px;color:#FF6B00"&gt;${code}&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;p style="color:#999;font-size:12px;margin:18px 0 0"&gt;If you didn't request this code, please ignore this email.&lt;/p&gt;
+        &lt;p style="color:#999;font-size:12px;margin:6px 0 0"&gt;OKad Africa · Cross-border logistics made simple&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;`;
+
+  let resendResp;
+  try {
+    resendResp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + resendKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromAddr,
+        to: [email],
+        subject: subject,
+        html: htmlBody,
+      }),
+    });
+  } catch (e) {
+    return jsonError(502, 'Resend network error: ' + e.message);
+  }
+
+  if (!resendResp.ok) {
+    const errText = await resendResp.text();
+    return jsonError(resendResp.status, 'Resend error: ' + errText.slice(0, 500));
+  }
+
+  const resendJson = await resendResp.json();
+
+  return jsonOk({
+    ok: true,
+    mock: false,
+    email: email,
+    message_id: resendJson.id || null,
+    /* Don't return code to client! Only server knows. */
+    message: 'Verification code sent. Check inbox (and spam folder).',
+  });
+}
+
+/* ============================================================
+ *   /api/sms-code  — Verification code via Africa's Talking SMS
+ *   SMS providers supported (configure via env):
+ *     - Africa's Talking: AFRICASTALKING_API_KEY + AFRICASTALKING_USERNAME + AFRICASTALKING_FROM
+ *   Body: { phone: "+233..." }  (E.164 format)
+ *   Returns: { ok, mock, phone, sid? }
+ * ============================================================ */
+async function handleSmsCode(req, env) {
+  let body;
+  try { body = await req.json(); }
+  catch (e) { return jsonError(400, 'Invalid JSON body'); }
+
+  const phone = (body.phone || '').toString().trim();
+
+  /* E.164 validation: starts with +, 8-15 digits */
+  if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+    return jsonError(400, 'Invalid phone format. Use E.164: +233244123456');
+  }
+
+  /* Per-IP rate limit (3/min, more strict than email) */
+  const ip = req.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!await checkRate(env, ip, 'sms', 3)) {
+    return jsonError(429, 'SMS rate limit exceeded (3 requests/min per IP). Please wait.');
+  }
+
+  /* Generate 6-digit code */
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+
+  /* Check Africa's Talking config */
+  const atKey = env.AFRICASTALKING_API_KEY;
+  const atUser = env.AFRICASTALKING_USERNAME;
+  const atFrom = env.AFRICASTALKING_FROM || 'OKad';
+
+  if (!atKey || !atUser) {
+    /* Mock mode: return code in body */
+    return jsonOk({
+      ok: true,
+      mock: true,
+      code: '888888',
+      message: 'AFRICASTALKING_* not configured. Returning DEMO code 888888.',
+      phone: phone,
+    });
+  }
+
+  /* Build SMS message */
+  const smsBody = `[OKad] Your verification code is ${code}. It expires in 10 minutes. Do not share.`;
+
+  /* Call Africa's Talking API */
+  /* Sandbox URL: sandbox.api.africastalking.com — set AFRICASTALKING_SANDBOX=true for free test */
+  const isSandbox = env.AFRICASTALKING_SANDBOX === 'true' || env.AFRICASTALKING_SANDBOX === '1';
+  const atBase = isSandbox
+    ? 'https://sandbox.api.africastalking.com/version1/messaging'
+    : 'https://api.africastalking.com/version1/messaging';
+
+  /* Form-urlencoded body */
+  const formBody = new URLSearchParams({
+    username: atUser,
+    to: phone,
+    message: smsBody,
+    from: atFrom,
+  }).toString();
+
+  let atResp;
+  try {
+    atResp = await fetch(atBase, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + btoa(atUser + ':' + atKey),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+      },
+      body: formBody,
+    });
+  } catch (e) {
+    return jsonError(502, "Africa's Talking network error: " + e.message);
+  }
+
+  const respText = await atResp.text();
+  let respJson;
+  try { respJson = JSON.parse(respText); }
+  catch (e) { respJson = { raw: respText.slice(0, 500) }; }
+
+  if (!atResp.ok) {
+    return jsonError(atResp.status, "Africa's Talking error: " + respText.slice(0, 500));
+  }
+
+  /* AT wraps responses: { SMSMessageData: { Message: "...", Recipients: [{status, messageId, number, cost}] } } */
+  const recipients = respJson.SMSMessageData && respJson.SMSMessageData.Recipients;
+  if (!recipients || recipients.length === 0) {
+    return jsonError(502, "No recipients returned from Africa's Talking: " + respText.slice(0, 300));
+  }
+  const r = recipients[0];
+  if (r.status && r.status !== 'Success' && r.statusCode && r.statusCode !== 100 && r.statusCode !== 101) {
+    return jsonError(502, "Africa's Talking rejected SMS: " + (r.status || 'unknown') + ' — ' + (r.messageId || ''));
+  }
+
+  return jsonOk({
+    ok: true,
+    mock: false,
+    phone: phone,
+    sid: r.messageId || null,
+    status: r.status || 'Success',
+    cost: r.cost || null,
+    message: 'SMS sent. Code will arrive within 10 seconds.',
+  });
+}
+
+/* ---------- Helpers ---------- */
+function jsonOk(data) {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-store',
+    }
+  });
+}
+
+function jsonError(status, msg) {
+  return new Response(JSON.stringify({ error: msg, status: status }), {
+    status: status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    }
+  });
+}
+
+/**
+ * Lightweight in-memory rate limit (per Worker instance, per route).
+ * Production-grade tracking would use KV, but free Workers don't have it by default.
+ * If user upgrades to Workers Paid ($5/mo), swap to KV or Durable Objects.
+ */
+const rateMap = new Map();
+async function checkRate(env, ip, route, max) {
+  max = max || 10;
+  const key = route + ':' + ip;
+  const now = Date.now();
+  const window = 60 * 1000;        // 1 minute
+  const arr = rateMap.get(key) || [];
+  const fresh = arr.filter(t =&gt; now - t &lt; window);
+  if (fresh.length &gt;= max) {
+    rateMap.set(key, fresh);
+    return false;
+  }
+  fresh.push(now);
+  rateMap.set(key, fresh);
+  /* Periodic cleanup to prevent memory leak */
+  if (rateMap.size &gt; 5000) {
+    for (const [k, v] of rateMap.entries()) {
+      if (!v.length || now - v[v.length - 1] &gt; window) rateMap.delete(k);
+    }
+  }
+  return true;
+}
+
+/* ============================================================
+ *   /api/db/{table}  — Cloudflare D1 CRUD
+ *   ============================================================
+ *   通用 REST 风格数据库接口,前端通过 Worker 访问 D1
+ *
+ *   GET    /api/db/{table}?email=x&order=reg_ts.desc   → 查询
+ *   POST   /api/db/{table}    { "email":..., ... }    → upsert by PK
+ *   PATCH  /api/db/{table}?email=x  { "field":... }  → 部分更新
+ *   DELETE /api/db/{table}?email=x                    → 删除
+ *
+ *   支持的 table (白名单,防止 SQL 注入):
+ *     users / orders / cooperation / kyc_logs / fx_snapshots
+ *
+ *   单租户设计 — 不需要 RLS。如需多管理员鉴权,后续在 Worker 加 admin token。
+ * ============================================================ */
+
+/* 字段白名单 — 防止前端塞任意字段进数据库 */
+const DB_TABLE_FIELDS = {
+  users: {
+    pk: 'email',
+    fields: ['email','name','phone','country','id_type','id_number','ip',
+             'kyc_status','kyc_reason','kyc_ts','kyc_by','reg_ts','last_login',
+             'orders_count','total_spent']
+  },
+  orders: {
+    pk: 'id',
+    fields: ['id','user_email','data','status','amount','currency','created_at','updated_at']
+  },
+  cooperation: {
+    pk: 'id',
+    fields: ['id','data','status','created_at']
+  },
+  kyc_logs: {
+    pk: 'id',
+    fields: ['id','user_email','action','reason','operator','created_at']
+  },
+  fx_snapshots: {
+    pk: 'id',
+    fields: ['id','base','rates_json','source','cached','created_at']
+  }
+};
+
+async function handleDb(req, env, table) {
+  /* 1. table 白名单检查 */
+  if (!DB_TABLE_FIELDS[table]) {
+    return jsonError(400, 'Unknown table. Allowed: ' + Object.keys(DB_TABLE_FIELDS).join(', '));
+  }
+
+  /* 2. D1 binding 检查 */
+  if (!env.DB) {
+    return jsonError(503, 'D1 database binding (DB) not configured. Run: wrangler d1 create okad-db && wrangler deploy');
+  }
+
+  const cfg = DB_TABLE_FIELDS[table];
+  const url = new URL(req.url);
+  const params = url.searchParams;
+
+  try {
+    /* ============ GET — 查询 ============ */
+    if (req.method === 'GET') {
+      const where = [];
+      const binds = [];
+      /* 只允许查询已声明字段 */
+      for (const f of cfg.fields) {
+        if (params.has(f)) {
+          where.push(f + ' = ?' + (f === 'email' || f === 'user_email' ? ' COLLATE NOCASE' : ''));
+          binds.push(params.get(f));
+        }
+      }
+      let sql = 'SELECT * FROM ' + table;
+      if (where.length) sql += ' WHERE ' + where.join(' AND ');
+
+      /* 排序 */
+      if (params.has('order')) {
+        const ord = params.get('order').split(',');
+        const clauses = [];
+        for (const o of ord) {
+          const m = o.match(/^([a-z_]+)(?:\.(asc|desc))?$/);
+          if (m && cfg.fields.indexOf(m[1]) &gt;= 0) {
+            clauses.push(m[1] + ' ' + (m[2] || 'asc').toUpperCase());
+          }
+        }
+        if (clauses.length) sql += ' ORDER BY ' + clauses.join(', ');
+      }
+
+      /* 限制 */
+      const limit = Math.min(parseInt(params.get('limit') || '500'), 1000);
+      sql += ' LIMIT ' + limit;
+
+      const stmt = env.DB.prepare(sql).bind(...binds);
+      const result = await stmt.all();
+      return jsonOk({ rows: result.results || [], count: (result.results||[]).length });
+    }
+
+    /* ============ POST — Upsert (INSERT or UPDATE) ============ */
+    if (req.method === 'POST') {
+      const body = await req.json();
+      const filtered = {};
+      for (const f of cfg.fields) {
+        if (body[f] !== undefined) filtered[f] = body[f];
+      }
+      /* PK 必需 */
+      if (!filtered[cfg.pk]) {
+        return jsonError(400, 'Missing primary key: ' + cfg.pk);
+      }
+      /* 数据字段 JSON 序列化 */
+      if (filtered.data && typeof filtered.data !== 'string') {
+        filtered.data = JSON.stringify(filtered.data);
+      }
+
+      const cols = Object.keys(filtered);
+      const placeholders = cols.map(() =&gt; '?').join(',');
+      const vals = cols.map(c =&gt; filtered[c]);
+
+      /* SQLite UPSERT: INSERT ... ON CONFLICT(pk) DO UPDATE SET ... */
+      const updateClauses = cols
+        .filter(c =&gt; c !== cfg.pk)
+        .map(c =&gt; c + ' = excluded.' + c)
+        .join(', ');
+
+      let sql = 'INSERT INTO ' + table + ' (' + cols.join(',') + ') VALUES (' + placeholders + ')';
+      if (updateClauses) {
+        sql += ' ON CONFLICT(' + cfg.pk + ') DO UPDATE SET ' + updateClauses;
+      }
+
+      await env.DB.prepare(sql).bind(...vals).run();
+      return jsonOk({ ok: true, action: 'upserted', pk: filtered[cfg.pk] });
+    }
+
+    /* ============ PATCH — 部分更新 ============ */
+    if (req.method === 'PATCH') {
+      const body = await req.json();
+      /* 必须有 WHERE 条件(用 PK 字段过滤) */
+      const pkValue = params.get(cfg.pk);
+      if (!pkValue) {
+        return jsonError(400, 'PATCH requires ?' + cfg.pk + '=... in query string');
+      }
+      const sets = [];
+      const binds = [];
+      for (const f of cfg.fields) {
+        if (f === cfg.pk) continue;
+        if (body[f] !== undefined) {
+          sets.push(f + ' = ?');
+          let v = body[f];
+          if (f === 'data' && typeof v !== 'string') v = JSON.stringify(v);
+          binds.push(v);
+        }
+      }
+      if (!sets.length) {
+        return jsonError(400, 'No valid fields to update');
+      }
+      binds.push(pkValue);
+      const sql = 'UPDATE ' + table + ' SET ' + sets.join(', ') +
+                  ' WHERE ' + cfg.pk + ' = ?' + (cfg.pk === 'email' || cfg.pk === 'user_email' ? ' COLLATE NOCASE' : '');
+      const result = await env.DB.prepare(sql).bind(...binds).run();
+      return jsonOk({ ok: true, action: 'updated', changes: result.meta?.changes || 0 });
+    }
+
+    /* ============ DELETE — 删除 ============ */
+    if (req.method === 'DELETE') {
+      const pkValue = params.get(cfg.pk);
+      if (!pkValue) {
+        return jsonError(400, 'DELETE requires ?' + cfg.pk + '=... in query string');
+      }
+      const sql = 'DELETE FROM ' + table + ' WHERE ' + cfg.pk + ' = ?' +
+                  (cfg.pk === 'email' || cfg.pk === 'user_email' ? ' COLLATE NOCASE' : '');
+      const result = await env.DB.prepare(sql).bind(pkValue).run();
+      return jsonOk({ ok: true, action: 'deleted', changes: result.meta?.changes || 0 });
+    }
+
+    return jsonError(405, 'Method not allowed for /api/db/' + table + '. Use GET/POST/PATCH/DELETE.');
+  } catch (e) {
+    return jsonError(500, 'D1 error: ' + (e.message || String(e)));
+  }
+}</pre>
+<div class="toast" id="toast">✅ 已复制到剪贴板！去 Cloudflare 粘贴</div>
+<script>
+function copyAll(){
+  var code = document.getElementById('code').textContent;
+  navigator.clipboard.writeText(code).then(function(){
+    showToast();
+  }).catch(function(){
+    // fallback
+    var ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+function showToast(){
+  var t = document.getElementById('toast');
+  t.style.display = 'block';
+  setTimeout(function(){t.style.display='none';}, 3000);
+}
+function selectAll(){
+  var r = document.createRange();
+  r.selectNodeContents(document.getElementById('code'));
+  var s = window.getSelection();
+  s.removeAllRanges();
+  s.addRange(r);
+}
+function downloadCode(){
+  var code = document.getElementById('code').textContent;
+  var blob = new Blob([code], {type: 'text/javascript'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'worker.js';
+  a.click();
+}
+</script>
+</body>
+</html>

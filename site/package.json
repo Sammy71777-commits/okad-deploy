@@ -1,0 +1,14 @@
+{
+  "name": "okad-africa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OKAD AFRICA — China to Africa logistics & sourcing app with Exa AI search proxy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}

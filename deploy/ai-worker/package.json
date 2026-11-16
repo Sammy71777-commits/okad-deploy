@@ -1,0 +1,18 @@
+{
+  "name": "okad-muse-worker",
+  "version": "1.0.0",
+  "description": "OKAD AFRICA — Cloudflare Worker proxy for Meta Muse Image (via OpenRouter). Used by OKAD website to generate AI product marketing images at $0.01/image.",
+  "main": "worker.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "keywords": ["cloudflare-workers", "okad", "ai-image", "meta-muse", "openrouter"],
+  "license": "UNLICENSED",
+  "private": true
+}

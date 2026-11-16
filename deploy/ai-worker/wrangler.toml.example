@@ -1,0 +1,32 @@
+name = "okad-unified"
+main = "worker.js"
+compatibility_date = "2026-01-15"
+
+# ============================================================
+# D1 Database binding (Cloudflare SQLite)
+# ============================================================
+# 创建命令: wrangler d1 create okad-db
+# 创建完后 ,复制输出的 "database_id" 到下面的 [[d1_databases]] 块
+
+[[d1_databases]]
+binding = "DB"
+database_name = "okad-db"
+database_id = "REPLACE_WITH_YOUR_D1_ID"  # ← 创建后粘贴到这里
+
+# ============================================================
+# Secrets (用 wrangler secret put 命令设置,不要写在这里)
+# ============================================================
+# OPENROUTER_API_KEY     = "sk-or-v1-..."   # wrangler secret put OPENROUTER_API_KEY
+# RESEND_API_KEY         = "re_..."         # wrangler secret put RESEND_API_KEY
+# AFRICASTALKING_API_KEY = "atsk_..."       # wrangler secret put AFRICASTALKING_API_KEY
+
+# ============================================================
+# Variables (明文,可改)
+# ============================================================
+# AFRICASTALKING_USERNAME = "sandbox"
+# AFRICASTALKING_FROM     = "OKad"
+# AFRICASTALKING_SANDBOX  = "true"
+# RESEND_FROM             = "OKad Africa <noreply@okad.app>"
+
+[observability]
+enabled = true

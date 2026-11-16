@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OKAD AFRICA — Ship from China to Africa in 30 seconds.</title>
+<meta name="description" content="AI-powered shipping quotes for African importers. Compare Sea, Air & FCL prices across 25 routes (5 China ports × 5 Africa ports) instantly.">
+<meta property="og:title" content="OKAD AFRICA — Ship from China to Africa in 30 seconds.">
+<meta property="og:description" content="AI-powered shipping quotes. No signup. No email gate.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--orange:#F97316;--orange-l:#FFF1EA;--navy:#0F1A30;--green:#22C55E;--text:#0F1A30;--mid:#6B7280;--border:#E5E7EB;--bg:#F8FAFC;--max:1280px}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:#fff;line-height:1.5;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:100}
+.nav-in{max-width:var(--max);margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 24px}
+.logo{font-weight:900;font-size:20px;letter-spacing:-.5px}.logo span{color:var(--orange)}
+.nav-links{display:flex;gap:32px;font-size:14px;font-weight:600}
+.nav-links a{color:var(--text);text-decoration:none;transition:color .2s}.nav-links a:hover{color:var(--orange)}
+.cta{background:var(--navy);color:#fff;padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;border:none;cursor:pointer;text-decoration:none;transition:all .2s}.cta:hover{background:#1a2942;transform:translateY(-1px)}
+.hero{background:linear-gradient(135deg,#FFF8F3 0%,#fff 50%,#F0FDF4 100%);padding:80px 24px 60px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(249,115,22,.12) 0%,transparent 70%);pointer-events:none}
+.hero-in{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;position:relative}
+@media(max-width:860px){.hero-in{grid-template-columns:1fr;gap:32px}}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:var(--orange-l);color:var(--orange);padding:6px 16px;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:20px;box-shadow:0 2px 8px rgba(249,115,22,.15)}
+.hero-tag .dot{width:6px;height:6px;background:var(--orange);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:54px;font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:18px;color:var(--navy)}
+h1 .hl{color:var(--orange);position:relative}
+h1 .hl::after{content:'';position:absolute;bottom:2px;left:0;right:0;height:6px;background:rgba(249,115,22,.18);z-index:-1}
+.hero p{font-size:18px;color:var(--mid);margin-bottom:32px;max-width:520px}
+.cta-big{display:inline-flex;align-items:center;gap:8px;background:var(--orange);color:#fff;padding:16px 32px;border-radius:14px;font-size:16px;font-weight:800;border:none;cursor:pointer;text-decoration:none;box-shadow:0 8px 24px rgba(249,115,22,.3);transition:all .2s}
+.cta-big:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(249,115,22,.4)}
+.cta-ghost{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--navy);padding:15px 28px;border-radius:14px;font-size:15px;font-weight:700;border:1.5px solid var(--border);text-decoration:none;margin-left:12px;transition:all .2s}
+.cta-ghost:hover{border-color:var(--navy);background:var(--orange-l)}
+.hero-trust{margin-top:36px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--mid)}
+.hero-trust .b{font-size:22px;font-weight:900;color:var(--navy);display:block}
+.hero-trust span{padding-right:20px;border-right:1px solid var(--border)}
+.hero-trust span:last-child{border-right:none}
+.mockshot{background:#fff;border-radius:20px;box-shadow:0 24px 64px rgba(15,26,48,.15);padding:18px;position:relative;transform:perspective(1200px) rotateY(-6deg) rotateX(2deg);border:1px solid #e2e8f0}
+.mockshot::before{content:'';position:absolute;inset:0;border-radius:20px;background:linear-gradient(135deg,rgba(249,115,22,.05),transparent);pointer-events:none}
+.mock-bar{display:flex;gap:6px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f1f5f9}
+.mock-bar div{width:10px;height:10px;border-radius:50%;background:#e2e8f0}
+.mock-bar div:nth-child(1){background:#FF5F57}.mock-bar div:nth-child(2){background:#FFBD2E}.mock-bar div:nth-child(3){background:#28CA42}
+.mock-title{font-size:13px;font-weight:700;color:var(--mid);margin-bottom:10px}
+.mock-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.mock-in{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 11px;font-size:12px;color:var(--text);font-weight:600}
+.mock-btn{background:var(--navy);color:#fff;padding:11px;border-radius:9px;font-size:12px;font-weight:700;text-align:center}
+.mock-results{margin-top:8px;display:grid;gap:8px}
+.mock-card{border:1.5px solid #e2e8f0;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center}
+.mock-card.best{border-color:var(--green);background:linear-gradient(135deg,#F0FDF4,#fff)}
+.mock-card .mc-l{font-size:12px;font-weight:700;color:var(--navy)}
+.mock-card .mc-r{font-size:14px;font-weight:900;color:var(--navy)}
+.mock-card.best .mc-r{color:var(--green)}
+.mock-badge{background:var(--green);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:6px}
+.logos{background:#fff;padding:40px 24px;border-bottom:1px solid var(--border)}
+.logos-in{max-width:var(--max);margin:0 auto;text-align:center}
+.logos-label{font-size:11px;color:var(--mid);font-weight:700;letter-spacing:1px;margin-bottom:20px;text-transform:uppercase}
+.logos-row{display:flex;flex-wrap:wrap;gap:36px 56px;justify-content:center;align-items:center;font-size:14px;color:var(--mid);font-weight:600}
+.logos-row span{opacity:.7}
+.sec{padding:80px 24px}
+.sec-in{max-width:var(--max);margin:0 auto}
+.sec-title{font-size:42px;font-weight:900;letter-spacing:-1.5px;text-align:center;color:var(--navy);margin-bottom:14px;line-height:1.1}
+.sec-sub{font-size:17px;color:var(--mid);text-align:center;max-width:620px;margin:0 auto 56px}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:860px){.feats{grid-template-columns:1fr}}
+.feat{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:32px 26px;transition:all .25s}
+.feat:hover{border-color:var(--orange);transform:translateY(-4px);box-shadow:0 16px 32px rgba(249,115,22,.1)}
+.feat-icon{width:48px;height:48px;border-radius:12px;background:var(--orange-l);color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:18px}
+.feat h3{font-size:19px;font-weight:800;color:var(--navy);margin-bottom:10px;letter-spacing:-.3px}
+.feat p{font-size:14px;color:var(--mid);line-height:1.6}
+.routes{background:var(--navy);color:#fff;padding:80px 24px}
+.routes .sec-title,.routes .sec-sub{color:#fff}
+.routes .sec-sub{color:#94a3b8}
+.routes-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:var(--max);margin:0 auto}
+@media(max-width:860px){.routes-grid{grid-template-columns:repeat(2,1fr)}}
+.route-pill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 12px;text-align:center;transition:all .2s;cursor:pointer}
+.route-pill:hover{background:var(--orange);border-color:var(--orange);transform:translateY(-2px)}
+.route-pill .from{font-size:11px;font-weight:700;color:var(--orange);margin-bottom:4px}
+.route-pill .arr{font-size:18px;color:#94a3b8;margin:2px 0}
+.route-pill .to{font-size:13px;font-weight:800}
+.num{padding:80px 24px;background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.num-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:var(--max);margin:0 auto;text-align:center}
+@media(max-width:860px){.num-grid{grid-template-columns:repeat(2,1fr)}}
+.num-cell .v{font-size:48px;font-weight:900;color:var(--orange);letter-spacing:-2px;line-height:1}
+.num-cell .l{font-size:13px;color:var(--mid);font-weight:600;margin-top:6px}
+.cta-band{padding:80px 24px;background:linear-gradient(135deg,#FFF8F3 0%,#F0FDF4 100%);text-align:center}
+.cta-band h2{font-size:44px;font-weight:900;color:var(--navy);letter-spacing:-1.5px;margin-bottom:16px;line-height:1.1}
+.cta-band p{font-size:17px;color:var(--mid);max-width:560px;margin:0 auto 32px}
+.cta-band .cta-big{font-size:18px;padding:18px 40px}
+.foot{padding:40px 24px;background:var(--navy);color:#94a3b8;font-size:13px}
+.foot-in{max-width:var(--max);margin:0 auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px}
+.foot a{color:#94a3b8;text-decoration:none;margin-left:24px}
+.foot a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-in">
+<div class="logo">OKAD<span> AFRICA</span></div>
+<div class="nav-links">
+<a href="#features">Features</a>
+<a href="#routes">Routes</a>
+<a href="#how">How it works</a>
+<a href="#pricing">Pricing</a>
+</div>
+<a href="https://app.okadafrica.com" class="cta">Get a Quote →</a>
+</div>
+</nav>
+
+<section class="hero">
+<div class="hero-in">
+<div>
+<span class="hero-tag"><span class="dot"></span>2025 H1 exports +21.6% YoY</span>
+<h1>Ship from China to <span class="hl">Africa</span>.<br>Start with <span class="hl">1 KG</span>.</h1>
+<p>AI-powered shipping quotes for African importers. Compare Sea, Air & Full-Container prices across 25 routes in 30 seconds. No signup. No email gate.</p>
+<a href="https://app.okadafrica.com" class="cta-big">Get a Quote →</a>
+<a href="#features" class="cta-ghost">See how it works</a>
+<div class="hero-trust">
+<span><b class="b">$171B</b>China→Africa trade flow</span>
+<span><b class="b">25</b>routes live</span>
+<span><b class="b">30s</b>to get 3 quotes</span>
+<span><b class="b">3 langs</b>EN · 中 · FR</span>
+</div>
+</div>
+<div class="mockshot">
+<div class="mock-bar"><div></div><div></div><div></div></div>
+<div class="mock-title">Ship from China to Africa →</div>
+<div class="mock-form">
+<div class="mock-in">Shenzhen</div>
+<div class="mock-in">Lagos</div>
+<div class="mock-in">500 kg</div>
+<div class="mock-in">2 CBM</div>
+</div>
+<div class="mock-btn">Compare with AI</div>
+<div class="mock-results">
+<div class="mock-card"><span class="mc-l">Sea Cargo (LCL)</span><span class="mc-r">$5,000 · 30-38d</span></div>
+<div class="mock-card best"><span class="mc-l">Air Cargo <span class="mock-badge">BEST</span></span><span class="mc-r">$2,750 · 3-7d</span></div>
+<div class="mock-card"><span class="mc-l">FCL 20ft</span><span class="mc-r">$1,750 · 25-30d</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<div class="logos">
+<div class="logos-in">
+<div class="logos-label">BUILT FOR AFRICAN IMPORTERS, SOURCING AGENTS & SMALL BUSINESSES</div>
+<div class="logos-row">
+<span>Nigeria</span><span>Kenya</span><span>South Africa</span><span>Ghana</span><span>Egypt</span><span>Tanzania</span><span>Uganda</span><span>Cameroon</span><span>Senegal</span>
+</div>
+</div>
+</div>
+
+<section class="sec" id="features">
+<div class="sec-in">
+<h2 class="sec-title">Stop emailing 10 forwarders for quotes.</h2>
+<p class="sec-sub">OKAD gives you AI-powered shipping quotes across every major China→Africa route, instantly.</p>
+<div class="feats">
+<div class="feat">
+<div class="feat-icon">📦</div>
+<h3>1. Search 1688 & Alibaba</h3>
+<p>Type any product — "Phone Accessories", "Solar Panels", "Auto Parts". AI searches Chinese suppliers and shows you the best deals with MOQ, ratings, shipping options.</p>
+</div>
+<div class="feat">
+<div class="feat-icon">⚖️</div>
+<h3>2. Compare 3 shipping options</h3>
+<p>Enter your cargo weight & volume. Get Sea (LCL), Air, and Full-Container quotes side-by-side with transparent pricing. AI recommends the best value.</p>
+</div>
+<div class="feat">
+<div class="feat-icon">💳</div>
+<h3>3. Pay & Track in one app</h3>
+<p>Pay with mobile money, bank transfer, or card. Track your cargo from warehouse to your port — auto-updating status, no chasing emails.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="routes" id="routes">
+<div class="sec-in">
+<h2 class="sec-title">25 live routes · 5 ports × 5 ports</h2>
+<p class="sec-sub">Real pricing, real-time quotes. Click any route to see current rates.</p>
+<div class="routes-grid">
+<div class="route-pill"><div class="from">SHENZHEN</div><div class="arr">→</div><div class="to">LAGOS</div></div>
+<div class="route-pill"><div class="from">SHENZHEN</div><div class="arr">→</div><div class="to">MOMBASA</div></div>
+<div class="route-pill"><div class="from">SHENZHEN</div><div class="arr">→</div><div class="to">DURBAN</div></div>
+<div class="route-pill"><div class="from">SHENZHEN</div><div class="arr">→</div><div class="to">TEMA</div></div>
+<div class="route-pill"><div class="from">SHENZHEN</div><div class="arr">→</div><div class="to">ALEXANDRIA</div></div>
+<div class="route-pill"><div class="from">GUANGZHOU</div><div class="arr">→</div><div class="to">LAGOS</div></div>
+<div class="route-pill"><div class="from">GUANGZHOU</div><div class="arr">→</div><div class="to">MOMBASA</div></div>
+<div class="route-pill"><div class="from">GUANGZHOU</div><div class="arr">→</div><div class="to">DURBAN</div></div>
+<div class="route-pill"><div class="from">GUANGZHOU</div><div class="arr">→</div><div class="to">TEMA</div></div>
+<div class="route-pill"><div class="from">GUANGZHOU</div><div class="arr">→</div><div class="to">ALEXANDRIA</div></div>
+<div class="route-pill"><div class="from">SHANGHAI</div><div class="arr">→</div><div class="to">LAGOS</div></div>
+<div class="route-pill"><div class="from">SHANGHAI</div><div class="arr">→</div><div class="to">MOMBASA</div></div>
+<div class="route-pill"><div class="from">SHANGHAI</div><div class="arr">→</div><div class="to">DURBAN</div></div>
+<div class="route-pill"><div class="from">SHANGHAI</div><div class="arr">→</div><div class="to">TEMA</div></div>
+<div class="route-pill"><div class="from">SHANGHAI</div><div class="arr">→</div><div class="to">ALEXANDRIA</div></div>
+<div class="route-pill"><div class="from">NINGBO</div><div class="arr">→</div><div class="to">LAGOS</div></div>
+<div class="route-pill"><div class="from">NINGBO</div><div class="arr">→</div><div class="to">MOMBASA</div></div>
+<div class="route-pill"><div class="from">NINGBO</div><div class="arr">→</div><div class="to">DURBAN</div></div>
+<div class="route-pill"><div class="from">NINGBO</div><div class="arr">→</div><div class="to">TEMA</div></div>
+<div class="route-pill"><div class="from">NINGBO</div><div class="arr">→</div><div class="to">ALEXANDRIA</div></div>
+<div class="route-pill"><div class="from">YIWU</div><div class="arr">→</div><div class="to">LAGOS</div></div>
+<div class="route-pill"><div class="from">YIWU</div><div class="arr">→</div><div class="to">MOMBASA</div></div>
+<div class="route-pill"><div class="from">YIWU</div><div class="arr">→</div><div class="to">DURBAN</div></div>
+<div class="route-pill"><div class="from">YIWU</div><div class="arr">→</div><div class="to">TEMA</div></div>
+<div class="route-pill"><div class="from">YIWU</div><div class="arr">→</div><div class="to">ALEXANDRIA</div></div>
+</div>
+</div>
+</section>
+
+<section class="num">
+<div class="num-grid">
+<div class="num-cell"><div class="v">25</div><div class="l">China → Africa routes</div></div>
+<div class="num-cell"><div class="v">3</div><div class="l">shipping modes per quote</div></div>
+<div class="num-cell"><div class="v">30s</div><div class="l">average quote time</div></div>
+<div class="num-cell"><div class="v">3</div><div class="l">languages: EN · 中 · FR</div></div>
+</div>
+</section>
+
+<section class="cta-band">
+<h2>Get your first quote in 30 seconds.</h2>
+<p>No signup. No credit card. Just enter weight & volume, see 3 transparent prices.</p>
+<a href="https://app.okadafrica.com" class="cta-big">Try OKAD AFRICA →</a>
+</section>
+
+<footer class="foot">
+<div class="foot-in">
+<div>© 2025 OKAD AFRICA · China → Africa supply network</div>
+<div>
+<a href="#">Privacy</a>
+<a href="#">Terms</a>
+<a href="mailto:hello@okadafrica.com">Contact</a>
+<a href="https://wa.me/8613800000000">WhatsApp</a>
+</div>
+</div>
+</footer>
+
+</body>
+</html>

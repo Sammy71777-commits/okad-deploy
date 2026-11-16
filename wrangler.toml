@@ -1,0 +1,16 @@
+name = "shrill-wave-7c04"
+main = "worker-okad.js"
+compatibility_date = "2024-10-01"
+account_id = "252c97d55b93ab211e9836a0893e0566"
+
+[vars]
+SITE_URL = "https://okadafrica.com"
+
+[[kv_namespaces]]
+binding = "OTPS"
+id = "e2ba028ffa2e4c76b7fa4fa7f8071563"
+
+[[d1_databases]]
+binding = "DB"
+database_id = "659ab74f-e738-480e-9278-b4ece6a57c8a"
+database_name = "okad-database"

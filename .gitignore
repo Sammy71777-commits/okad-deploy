@@ -1,0 +1,54 @@
+# Core dumps (core.1404 有 4.2GB)
+core.*
+*.core
+
+# 根目录截图/图片（deploy/ 和 site/ 里的图标是部署资源，保留）
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 本地工具与缓存目录
+.wrangler/
+.playwright-cli/
+.cert/
+.codebuddy/
+computer-use-recordings/
+logo/
+logo2/
+logo-final/
+logo-kit/
+
+# 根目录调试/验证脚本与截图
+diag_*.py
+verify_*.py
+test_*.py
+test_*.js
+shot_*.png
+live_*.png
+marketing_*.png
+dark*.png
+final_*.png
+act_*.png
+admin_*.png
+f6_*.png
+rcpt_*.png
+wiz_*.png
+ux_*.png
+pwa_*.png
+seo_*.png
+kyc_*.png
+pay_*.png
+ship_*.png
+ai_tab_*.png
+
+# 日志与临时文件
+*.log
+*.tmp
+Check
+Inspect
+Run

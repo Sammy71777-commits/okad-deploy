@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /*.json$
+
+Sitemap: https://a830e4ff7cb85da66.sg.agentos-app.run/sitemap.xml
