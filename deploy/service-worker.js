@@ -8,7 +8,7 @@
  * 版本：每发版时递增 CACHE_VERSION，旧缓存会被自动清掉
  */
 
-const CACHE_VERSION = 'okad-v47';
+const CACHE_VERSION = 'okad-v48';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const HTML_CACHE = CACHE_VERSION + '-html';
 const OFFLINE_URL = '/offline.html';
